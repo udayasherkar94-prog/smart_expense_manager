@@ -1,6 +1,8 @@
 
 from decimal import Decimal, InvalidOperation
 
+from app.models.transaction import Income, Expense
+
 
 class Account:
 
@@ -11,11 +13,13 @@ class Account:
 
         self.owner = owner.strip()
 
-        # Private attribute
         self.__balance = self._validate_amount(
             initial_balance,
             allow_zero=True
         )
+
+        # Store all income and expense objects
+        self.__transactions = []
 
     def _validate_amount(self, amount, allow_zero=False):
 
@@ -37,8 +41,12 @@ class Account:
 
     @property
     def balance(self):
-        # Read-only access to the private balance
         return self.__balance
+
+    @property
+    def transactions(self):
+        # Return a tuple so callers cannot modify our list
+        return tuple(self.__transactions)
 
     def deposit(self, amount):
 
@@ -58,3 +66,30 @@ class Account:
         self.__balance -= amount
 
         return f"Withdrawal successful. Balance: Rs. {self.__balance:.2f}"
+
+    def add_income(self, income):
+
+        if not isinstance(income, Income):
+            raise TypeError("Expected an Income object")
+
+        self.deposit(income.amount)
+
+        self.__transactions.append(income)
+
+        return f"Income added: {income.get_details()}"
+
+    def add_expense(self, expense):
+
+        if not isinstance(expense, Expense):
+            raise TypeError("Expected an Expense object")
+
+        self.withdraw(expense.amount)
+
+        self.__transactions.append(expense)
+
+        return f"Expense added: {expense.get_details()}"
+
+    def get_transaction_history(self):
+
+        for transaction in self.__transactions:
+            print(transaction.get_details())
